@@ -21,7 +21,10 @@ func parseTraining(data string) (int, string, time.Duration, error) {
 	}
 
 	steps, err := strconv.Atoi(parts[0])
-	if err != nil || steps <= 0 {
+	if err != nil {
+		return 0, "", 0, fmt.Errorf("Неправильный тип %v", err)
+	}
+	if steps <= 0 {
 		return 0, "", 0, fmt.Errorf("невалидное количество шагов: %v", err)
 	}
 
@@ -69,25 +72,27 @@ func TrainingInfo(data string, weight, height float64) string {
 	steps, activity, duration, err := parseTraining(data)
 	if err != nil {
 		fmt.Println("Ошибка:", err)
-		return ""
+		return err.Error()
 	}
 
+	// Общие вычисления для всех типов активности
+	dist := distance(steps)
+	speed := meanSpeed(steps, duration)
+
+	// Определение калорий в зависимости от активности
+	var cals float64
 	switch activity {
 	case "Бег":
-		dist := distance(steps)
-		speed := meanSpeed(steps, duration)
-		cals := RunningSpentCalories(steps, weight, duration)
-		return fmt.Sprintf("Тип тренировки: %s\nДлительность: %.2f ч.\nДистанция: %.2f км.\nСкорость: %.2f км/ч\nСожгли калорий: %.2f",
-			activity, duration.Hours(), dist, speed, cals)
+		cals = RunningSpentCalories(steps, weight, duration)
 	case "Ходьба":
-		dist := distance(steps)
-		speed := meanSpeed(steps, duration)
-		cals := WalkingSpentCalories(steps, weight, height, duration)
-		return fmt.Sprintf("Тип тренировки: %s\nДлительность: %.2f ч.\nДистанция: %.2f км.\nСкорость: %.2f км/ч\nСожгли калорий: %.2f",
-			activity, duration.Hours(), dist, speed, cals)
+		cals = WalkingSpentCalories(steps, weight, height, duration)
 	default:
 		return "неизвестный тип тренировки"
 	}
+
+	// Формирование строки с результатами
+	return fmt.Sprintf("Тип тренировки: %s\nДлительность: %.2f ч.\nДистанция: %.2f км.\nСкорость: %.2f км/ч\nСожгли калорий: %.2f",
+		activity, duration.Hours(), dist, speed, cals)
 }
 
 // Константы для расчета калорий, расходуемых при беге.

@@ -3,6 +3,7 @@ package daysteps
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Yandex-Practicum/go1fl-4-sprint-final/internal/spentcalories"
@@ -10,28 +11,22 @@ import (
 
 var (
 	StepLength = 0.65 // длина шага в метрах
+	Kilometer  = 1000 // длина километра в метрах
 )
 
 func parsePackage(data string) (int, time.Duration, error) {
-	var parts []string
-	current := ""
-
-	for _, ch := range data {
-		if ch == ',' {
-			parts = append(parts, current)
-			current = ""
-			continue
-		}
-		current += string(ch)
-	}
-	parts = append(parts, current) // добавим последний элемент
+	parts := strings.Split(data, ",")
 
 	if len(parts) != 2 {
 		return 0, 0, fmt.Errorf("неправильное количество аргументов")
 	}
 
 	steps, err := strconv.Atoi(parts[0])
-	if err != nil || steps <= 0 {
+	if err != nil {
+		return 0, 0, fmt.Errorf("неправильное тип %v", err)
+	}
+
+	if steps <= 0 {
 		return 0, 0, fmt.Errorf("невалидное количество шагов: %v", err)
 	}
 
@@ -61,7 +56,7 @@ func DayActionInfo(data string, weight, height float64) string {
 	}
 
 	// Вычисляем дистанцию в километрах
-	distance := float64(steps) * StepLength / 1000
+	distance := float64(steps) * StepLength / float64(Kilometer)
 
 	// Вычисляем потраченные калории (используем функцию из пакета spentcalories)
 	calories := spentcalories.WalkingSpentCalories(steps, weight, height, duration)
